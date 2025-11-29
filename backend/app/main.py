@@ -1,4 +1,5 @@
 """Main FastAPI application for Cyber HealthGuard AI"""
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -47,21 +48,33 @@ app = FastAPI(
 )
 
 # CORS configuration
-# NOTE: Cannot use "*" with allow_credentials=True
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://cyberhealthguards.netlify.app",
-        "https://*.netlify.app",  # All Netlify deploy previews
+# Read allowed origins from environment variables with fallback defaults
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+if allowed_origins_env:
+    allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+else:
+    # Default allowed origins
+    allowed_origins = [
+        "https://healthguards-ai.netlify.app",
         "http://localhost:5173",
         "http://localhost:3000",
-        "http://localhost:8000",
-    ],
+    ]
+
+# Read origin regex from environment variable
+allow_origin_regex_env = os.getenv("ALLOW_ORIGIN_REGEX", "")
+if allow_origin_regex_env:
+    allow_origin_regex = allow_origin_regex_env
+else:
+    # Default: Allow all Netlify deploy previews
+    allow_origin_regex = r"https://.*\.netlify\.app"
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=3600,
 )
 
 # Include routers
