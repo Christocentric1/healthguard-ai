@@ -3,7 +3,7 @@ primary_region = "ord"
 
 [build]
   dockerfile = "./backend/Dockerfile"
-  context = "./backend"
+  context = "backend"
 
 [env]
   PORT = "8000"
