@@ -1,0 +1,46 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: cyber_healthguard_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=cyber_healthguard
+    networks:
+      - cyber_healthguard_network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cyber_healthguard_api
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_DB_NAME=cyber_healthguard
+      - DEBUG=true
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - cyber_healthguard_network
+    # Commented out volume mount - use files baked into image
+    # volumes:
+    #   - ./app:/app/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  cyber_healthguard_network:
+    driver: bridge

@@ -1,0 +1,38 @@
+services:
+  # FastAPI Backend
+  - type: web
+    name: cyber-guardian-backend
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_NAME
+        value: Cyber HealthGuard AI
+      - key: APP_VERSION
+        value: 1.0.0
+      - key: DEBUG
+        value: false
+      - key: MONGODB_DB_NAME
+        value: cyber_healthguard
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 43200
+      - key: ANOMALY_THRESHOLD
+        value: 0.7
+      - key: MIN_SAMPLES_FOR_TRAINING
+        value: 100
+      - key: FAILED_LOGIN_THRESHOLD
+        value: 5
+      - key: DEFAULT_PAGE_SIZE
+        value: 20
+      - key: MAX_PAGE_SIZE
+        value: 100
+      - key: MONGO_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+    healthCheckPath: /health
