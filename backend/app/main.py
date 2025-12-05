@@ -48,25 +48,26 @@ app = FastAPI(
 )
 
 # CORS configuration
-# Read allowed origins from environment variables with fallback defaults
+# Read allowed origins from environment variable or use comprehensive regex pattern
+allow_origin_regex_env = os.getenv("ALLOW_ORIGIN_REGEX", "")
+if allow_origin_regex_env:
+    allow_origin_regex = allow_origin_regex_env
+else:
+    # Regex pattern that matches:
+    # - All Netlify deploy previews (*.netlify.app)
+    # - Localhost on common ports (3000, 5173, 8000, 8080)
+    allow_origin_regex = r"^https://.*\.netlify\.app$|^http://localhost(:[0-9]+)?$"
+
+# Specific production origins (for explicit allow list)
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
 if allowed_origins_env:
     allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
 else:
-    # Default allowed origins
     allowed_origins = [
         "https://healthguards-ai.netlify.app",
         "http://localhost:5173",
         "http://localhost:3000",
     ]
-
-# Read origin regex from environment variable
-allow_origin_regex_env = os.getenv("ALLOW_ORIGIN_REGEX", "")
-if allow_origin_regex_env:
-    allow_origin_regex = allow_origin_regex_env
-else:
-    # Default: Allow all Netlify deploy previews
-    allow_origin_regex = r"https://.*\.netlify\.app"
 
 app.add_middleware(
     CORSMiddleware,
@@ -75,6 +76,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 # Include routers
