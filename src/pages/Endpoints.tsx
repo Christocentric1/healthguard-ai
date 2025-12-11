@@ -4,14 +4,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from '@tanstack/react-query';
 import { mockEndpoints, Endpoint } from "@/data/mockData";
-import { apiFetch, API_ENDPOINTS, USE_MOCK_DATA } from '@/lib/api';
+import { fetchEndpoints, USE_MOCK_DATA } from '@/lib/api';
 import { Activity } from "lucide-react";
 
 export default function Endpoints() {
   // Fetch live endpoints from API
   const { data: endpointsData, isLoading } = useQuery({
     queryKey: ['endpoints'],
-    queryFn: () => apiFetch<{endpoints: Endpoint[], total: number}>(API_ENDPOINTS.endpoints),
+    queryFn: fetchEndpoints,
     enabled: !USE_MOCK_DATA,
   });
 

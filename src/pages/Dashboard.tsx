@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Shield, Activity, FileCheck, FileWarning, Brain, Server, TrendingUp, AlertCircle } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
-import { apiFetch, API_ENDPOINTS, USE_MOCK_DATA } from '@/lib/api';
+import { fetchAlerts, USE_MOCK_DATA } from '@/lib/api';
 import {
   mockAlerts,
   mockComplianceScore,
@@ -21,7 +21,7 @@ export default function Dashboard() {
   // Fetch live alerts from API
   const { data: alertsData, isLoading: alertsLoading } = useQuery({
     queryKey: ['alerts'],
-    queryFn: () => apiFetch<{alerts: Alert[], total: number}>(API_ENDPOINTS.alerts),
+    queryFn: fetchAlerts,
     enabled: !USE_MOCK_DATA,
   });
 

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockAlerts, Alert } from "@/data/mockData";
-import { apiFetch, API_ENDPOINTS, USE_MOCK_DATA } from '@/lib/api';
+import { fetchAlerts, USE_MOCK_DATA } from '@/lib/api';
 import { Filter, Activity } from "lucide-react";
 
 export default function Alerts() {
@@ -19,7 +19,7 @@ export default function Alerts() {
   // Fetch live alerts from API
   const { data: alertsData, isLoading } = useQuery({
     queryKey: ['alerts'],
-    queryFn: () => apiFetch<{alerts: Alert[], total: number}>(API_ENDPOINTS.alerts),
+    queryFn: fetchAlerts,
     enabled: !USE_MOCK_DATA,
   });
 

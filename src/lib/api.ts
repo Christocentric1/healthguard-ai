@@ -139,3 +139,122 @@ export function logApiConfig() {
   console.log(`  - API Base URL: ${API_BASE_URL}`);
   console.log(`  - Use Mock Data: ${USE_MOCK_DATA}`);
 }
+
+/**
+ * Transform API alert response to frontend Alert format
+ */
+interface ApiAlert {
+  alert_id: string;
+  organisation_id: string;
+  title: string;
+  description: string;
+  severity: string;
+  status: string;
+  host: string;
+  user: string;
+  event_type: string;
+  anomaly_score: number | null;
+  triggered_by: string;
+  rule_name?: string;
+  created_at: string;
+  updated_at: string;
+  comments: unknown[];
+  related_log_ids: string[];
+}
+
+interface ApiAlertsResponse {
+  alerts: ApiAlert[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export function transformAlert(apiAlert: ApiAlert) {
+  return {
+    id: apiAlert.alert_id,
+    timestamp: apiAlert.created_at,
+    organisation_id: apiAlert.organisation_id,
+    host: apiAlert.host,
+    user: apiAlert.user,
+    severity: apiAlert.severity as 'critical' | 'high' | 'medium' | 'low',
+    category: apiAlert.title,
+    description: apiAlert.description,
+    ai_risk_score: apiAlert.anomaly_score ? Math.round(apiAlert.anomaly_score * 100) : 50,
+    recommended_action: `Review ${apiAlert.event_type} event triggered by ${apiAlert.triggered_by}`,
+    status: apiAlert.status === 'open' ? 'new' : apiAlert.status as 'new' | 'investigating' | 'resolved' | 'false_positive',
+    source: apiAlert.triggered_by === 'rule' ? `Rule: ${apiAlert.rule_name || 'Unknown'}` : 'AI Detection',
+  };
+}
+
+export function transformAlertsResponse(response: ApiAlertsResponse) {
+  return {
+    alerts: response.alerts.map(transformAlert),
+    total: response.total,
+    page: response.page,
+    page_size: response.page_size,
+    total_pages: response.total_pages,
+  };
+}
+
+/**
+ * Transform API endpoint response to frontend Endpoint format
+ */
+interface ApiEndpoint {
+  organisation_id: string;
+  host: string;
+  ip_address: string | null;
+  os_type: string | null;
+  last_seen: string;
+  risk_level: string;
+  risk_score: number;
+  alert_count_7d: number;
+  alert_count_30d: number;
+  anomaly_count: number;
+  critical_alerts: number;
+  compliance_issues: number;
+}
+
+interface ApiEndpointsResponse {
+  endpoints: ApiEndpoint[];
+  total: number;
+}
+
+export function transformEndpoint(apiEndpoint: ApiEndpoint, index: number) {
+  return {
+    id: `EP-${String(index + 1).padStart(3, '0')}`,
+    hostname: apiEndpoint.host,
+    ip: apiEndpoint.ip_address || 'Unknown',
+    os: apiEndpoint.os_type || 'Unknown',
+    last_seen: apiEndpoint.last_seen,
+    status: 'online' as const,
+    risk_level: apiEndpoint.risk_level as 'critical' | 'high' | 'medium' | 'low',
+    agent_version: '1.0.0',
+    compliance_score: Math.max(0, 100 - (apiEndpoint.compliance_issues * 10)),
+    alert_count: apiEndpoint.alert_count_7d,
+    risk_score: apiEndpoint.risk_score,
+  };
+}
+
+export function transformEndpointsResponse(response: ApiEndpointsResponse) {
+  return {
+    endpoints: response.endpoints.map((ep, i) => transformEndpoint(ep, i)),
+    total: response.total,
+  };
+}
+
+/**
+ * Fetch alerts with automatic transformation
+ */
+export async function fetchAlerts() {
+  const response = await apiFetch<ApiAlertsResponse>(API_ENDPOINTS.alerts);
+  return transformAlertsResponse(response);
+}
+
+/**
+ * Fetch endpoints with automatic transformation
+ */
+export async function fetchEndpoints() {
+  const response = await apiFetch<ApiEndpointsResponse>(API_ENDPOINTS.endpoints);
+  return transformEndpointsResponse(response);
+}
