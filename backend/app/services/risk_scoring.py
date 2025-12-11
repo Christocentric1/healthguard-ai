@@ -101,3 +101,14 @@ class RiskScoringService:
                 },
                 upsert=True
             )
+
+
+# NOTE:
+# The codebase previously referenced a `RiskScorer` class. To maintain
+# backward compatibility with those imports (e.g. in `ai_orchestrator`)
+# we expose a thin alias that reuses the current implementation.
+class RiskScorer(RiskScoringService):
+    """Backward-compatible alias for RiskScoringService."""
+
+    def __init__(self, db: AsyncIOMotorDatabase):
+        super().__init__(db)
