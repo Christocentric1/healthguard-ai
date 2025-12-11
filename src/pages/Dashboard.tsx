@@ -26,7 +26,10 @@ export default function Dashboard() {
   });
 
   // Use live data if available, fallback to mock data
-  const alerts = USE_MOCK_DATA ? mockAlerts : (alertsData?.alerts || mockAlerts);
+  // Ensure alerts is always an array
+  const alerts = USE_MOCK_DATA 
+    ? mockAlerts 
+    : (Array.isArray(alertsData?.alerts) ? alertsData.alerts : mockAlerts);
 
   const todayAlerts = alerts.length;
   const criticalAlerts = alerts.filter(a => a.severity === 'critical' && a.status !== 'resolved').length;

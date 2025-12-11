@@ -20,7 +20,10 @@ export default function Compliance() {
   });
 
   // Use live data if available, fallback to mock data
-  const complianceControls = USE_MOCK_DATA ? mockComplianceControls : (complianceData || mockComplianceControls);
+  // Ensure complianceControls is always an array (API returns { controls: [...] })
+  const complianceControls = USE_MOCK_DATA 
+    ? mockComplianceControls 
+    : (Array.isArray(complianceData) ? complianceData : mockComplianceControls);
 
   if (isLoading && !USE_MOCK_DATA) {
     return (

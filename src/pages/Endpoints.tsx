@@ -16,7 +16,10 @@ export default function Endpoints() {
   });
 
   // Use live data if available, fallback to mock data
-  const endpoints = USE_MOCK_DATA ? mockEndpoints : (endpointsData?.endpoints || mockEndpoints);
+  // Ensure endpoints is always an array
+  const endpoints = USE_MOCK_DATA 
+    ? mockEndpoints 
+    : (Array.isArray(endpointsData?.endpoints) ? endpointsData.endpoints : mockEndpoints);
 
   if (isLoading && !USE_MOCK_DATA) {
     return (

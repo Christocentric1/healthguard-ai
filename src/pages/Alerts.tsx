@@ -24,7 +24,10 @@ export default function Alerts() {
   });
 
   // Use live data if available, fallback to mock data
-  const alerts = USE_MOCK_DATA ? mockAlerts : (alertsData?.alerts || mockAlerts);
+  // Ensure alerts is always an array
+  const alerts = USE_MOCK_DATA 
+    ? mockAlerts 
+    : (Array.isArray(alertsData?.alerts) ? alertsData.alerts : mockAlerts);
 
   const filteredAlerts = alerts.filter(alert => {
     if (severityFilter !== "all" && alert.severity !== severityFilter) return false;
