@@ -10,7 +10,7 @@ from fastapi.responses import Response
 
 from .config import get_settings
 from .database import connect_to_mongo, close_mongo_connection
-from .routers import logs, alerts, endpoints, compliance, auth, telemetry
+from .routers import logs, alerts, endpoints, compliance, auth, telemetry, agent
 
 settings = get_settings()
 
@@ -107,6 +107,7 @@ app.include_router(alerts.router)
 app.include_router(endpoints.router)
 app.include_router(compliance.router)
 app.include_router(telemetry.router)
+app.include_router(agent.router)
 
 
 @app.get("/", tags=["Health"])
