@@ -1,5 +1,5 @@
 /**
- * API Configuration for Cyber HealthGuard
+ * API Configuration for Cyber Guardian
  *
  * This module provides centralized API configuration and utilities
  * for making requests to the backend.

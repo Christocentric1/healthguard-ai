@@ -56,7 +56,7 @@ export default function Login() {
               <Shield className="h-10 w-10 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Cyber HealthGuard AI</CardTitle>
+          <CardTitle className="text-2xl">Cyber Guardian AI</CardTitle>
           <CardDescription>Healthcare security monitoring platform</CardDescription>
         </CardHeader>
         <CardContent>

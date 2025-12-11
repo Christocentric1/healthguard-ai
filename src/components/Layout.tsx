@@ -34,7 +34,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
           <Shield className="h-8 w-8 text-sidebar-primary" />
           <div>
-            <h1 className="text-lg font-bold">Cyber HealthGuard</h1>
+            <h1 className="text-lg font-bold">Cyber Guardian</h1>
             <p className="text-xs text-sidebar-foreground/70">AI Security Platform</p>
           </div>
         </div>
