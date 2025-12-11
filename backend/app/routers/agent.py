@@ -209,18 +209,8 @@ Write-Host "  Cyber HealthGuard AI - Agent Installer   " -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Validate parameters
-if ([string]::IsNullOrEmpty($Server) -or $Server -eq "{server_url}") {{
-    Write-Host "ERROR: Server URL is required." -ForegroundColor Red
-    Write-Host "Usage: .\install.ps1 -Server https://your-server.com -OrgId your_org_id" -ForegroundColor Yellow
-    exit 1
-}}
-
-if ([string]::IsNullOrEmpty($OrgId) -or $OrgId -eq "{org_id}") {{
-    Write-Host "ERROR: Organisation ID is required." -ForegroundColor Red
-    Write-Host "Usage: .\install.ps1 -Server https://your-server.com -OrgId your_org_id" -ForegroundColor Yellow
-    exit 1
-}}
+# Validate parameters - only check for placeholders if not pre-configured
+{validation_block}
 
 Write-Host "Configuration:" -ForegroundColor Green
 Write-Host "  Server URL: $Server"
@@ -363,17 +353,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate parameters
-if [ -z "$SERVER" ] || [ "$SERVER" = "{{server_url}}" ]; then
-    echo -e "${{RED}}ERROR: Server URL is required.${{NC}}"
-    echo "Usage: curl -sSL $SERVER/install.sh | sudo bash -s -- -s https://your-server.com -o your_org_id"
-    exit 1
-fi
-
-if [ -z "$ORG_ID" ] || [ "$ORG_ID" = "{{org_id}}" ]; then
-    echo -e "${{RED}}ERROR: Organisation ID is required.${{NC}}"
-    echo "Usage: curl -sSL $SERVER/install.sh | sudo bash -s -- -s https://your-server.com -o your_org_id"
-    exit 1
-fi
+{linux_validation_block}
 
 echo -e "${{GREEN}}Configuration:${{NC}}"
 echo "  Server URL: $SERVER"
@@ -610,6 +590,29 @@ done
 '''
 
 
+VALIDATION_BLOCK_PLACEHOLDER = r'''if ([string]::IsNullOrEmpty($Server) -or $Server -eq "{server_url}") {
+    Write-Host "ERROR: Server URL is required." -ForegroundColor Red
+    Write-Host "Usage: .\install.ps1 -Server https://your-server.com -OrgId your_org_id" -ForegroundColor Yellow
+    exit 1
+}
+
+if ([string]::IsNullOrEmpty($OrgId) -or $OrgId -eq "{org_id}") {
+    Write-Host "ERROR: Organisation ID is required." -ForegroundColor Red
+    Write-Host "Usage: .\install.ps1 -Server https://your-server.com -OrgId your_org_id" -ForegroundColor Yellow
+    exit 1
+}'''
+
+VALIDATION_BLOCK_PRECONFIGURED = r'''if ([string]::IsNullOrEmpty($Server)) {
+    Write-Host "ERROR: Server URL is required." -ForegroundColor Red
+    exit 1
+}
+
+if ([string]::IsNullOrEmpty($OrgId)) {
+    Write-Host "ERROR: Organisation ID is required." -ForegroundColor Red
+    exit 1
+}'''
+
+
 @router.get("/install.ps1", response_class=PlainTextResponse)
 async def get_windows_installer(
     Server: str = Query(default="", description="API server URL"),
@@ -625,11 +628,41 @@ async def get_windows_installer(
         Invoke-WebRequest -Uri "https://your-server/install.ps1" -OutFile install.ps1
         ./install.ps1 -Server https://your-server -OrgId org_001
     """
+    # Choose validation block based on whether params were pre-configured
+    if Server and OrgId:
+        validation_block = VALIDATION_BLOCK_PRECONFIGURED
+    else:
+        validation_block = VALIDATION_BLOCK_PLACEHOLDER
+    
     script = WINDOWS_INSTALLER_TEMPLATE.format(
         server_url=Server if Server else "{server_url}",
-        org_id=OrgId if OrgId else "{org_id}"
+        org_id=OrgId if OrgId else "{org_id}",
+        validation_block=validation_block
     )
     return PlainTextResponse(content=script, media_type="text/plain")
+
+
+LINUX_VALIDATION_PLACEHOLDER = r'''if [ -z "$SERVER" ] || [ "$SERVER" = "{server_url}" ]; then
+    echo -e "${RED}ERROR: Server URL is required.${NC}"
+    echo "Usage: curl -sSL https://your-server/install.sh | sudo bash -s -- -s https://your-server.com -o your_org_id"
+    exit 1
+fi
+
+if [ -z "$ORG_ID" ] || [ "$ORG_ID" = "{org_id}" ]; then
+    echo -e "${RED}ERROR: Organisation ID is required.${NC}"
+    echo "Usage: curl -sSL https://your-server/install.sh | sudo bash -s -- -s https://your-server.com -o your_org_id"
+    exit 1
+fi'''
+
+LINUX_VALIDATION_PRECONFIGURED = r'''if [ -z "$SERVER" ]; then
+    echo -e "${RED}ERROR: Server URL is required.${NC}"
+    exit 1
+fi
+
+if [ -z "$ORG_ID" ]; then
+    echo -e "${RED}ERROR: Organisation ID is required.${NC}"
+    exit 1
+fi'''
 
 
 @router.get("/install.sh", response_class=PlainTextResponse)
@@ -646,9 +679,16 @@ async def get_linux_installer(
     Or with arguments:
         curl -sSL https://your-server/install.sh | sudo bash -s -- -s https://your-server -o org_001
     """
+    # Choose validation block based on whether params were pre-configured
+    if Server and OrgId:
+        linux_validation_block = LINUX_VALIDATION_PRECONFIGURED
+    else:
+        linux_validation_block = LINUX_VALIDATION_PLACEHOLDER
+    
     script = LINUX_INSTALLER_TEMPLATE.format(
         server_url=Server if Server else "{server_url}",
-        org_id=OrgId if OrgId else "{org_id}"
+        org_id=OrgId if OrgId else "{org_id}",
+        linux_validation_block=linux_validation_block
     )
     return PlainTextResponse(content=script, media_type="text/plain")
 
